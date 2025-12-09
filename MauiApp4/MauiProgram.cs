@@ -19,18 +19,14 @@ namespace MauiApp4
                 });
 
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
 
-            RegisterPagesAndVM(builder.Services);
-            return builder.Build();
-        }
+            builder.Services.AddSingleton<IApiService, ApiService>();
+            builder.Services.AddTransient<ContactsViewModel>();
+            builder.Services.AddTransient<ContactsPage>();
 
-        private static void RegisterPagesAndVM(IServiceCollection service)
-        {
-            service.AddTransient<ContactsPage>();
-            service.AddTransient<IApiService, ApiService>();
-            service.AddTransient<ContactsViewModel>();
+            return builder.Build();
         }
     }
 }

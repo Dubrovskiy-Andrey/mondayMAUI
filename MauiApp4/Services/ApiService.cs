@@ -11,7 +11,7 @@ namespace MauiApp4.Services
     internal class ApiService : IApiService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _baseUrl = "https://localhost:7190/api/Contacts"; //-----  проверьте свои адреса API
+        private readonly string _baseUrl = "https://localhost:7190/api/Contacts";
 
         public ApiService()
         {
@@ -19,37 +19,26 @@ namespace MauiApp4.Services
             _httpClient.Timeout = TimeSpan.FromSeconds(30);
         }
 
-        public async  Task<ContactDto> CreateContactAsync(CreateContactDto contact)
+        public async Task<List<ContactDto>> GetContactsAsync(string search = null)
         {
             try
             {
-                var json = JsonSerializer.Serialize(contact);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var url = _baseUrl;
+                if (!string.IsNullOrEmpty(search))
+                {
+                    url += $"?Search={Uri.EscapeDataString(search)}";
+                }
 
-                var response = await _httpClient.PostAsync(_baseUrl, content);
+                var response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
 
-                var responseContent = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<ContactDto>(responseContent);
+                var content = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<List<ContactDto>>(content) ?? new List<ContactDto>();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ошибка создания контакта: {ex.Message}");
-                throw;
-            }
-        }
-
-        public async Task DeleteContactAsync(int id)
-        {
-            try
-            {
-                var response = await _httpClient.DeleteAsync($"{_baseUrl}/{id}");
-                response.EnsureSuccessStatusCode();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"ошибка удаления контакта: {ex.Message}");
-                throw;
+                Console.WriteLine($"Ошибка получения данных: {ex.Message}");
+                return new List<ContactDto>();
             }
         }
 
@@ -65,31 +54,28 @@ namespace MauiApp4.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ошибка получения данных: {ex.Message}");
+                Console.WriteLine($"Ошибка получения данных: {ex.Message}");
                 throw;
             }
         }
 
-        public async Task<List<ContactDto>> GetContactsAsync(string search = null)
+        public async Task<ContactDto> CreateContactAsync(CreateContactDto contact)
         {
             try
             {
-                var url = _baseUrl;
-                if (!string.IsNullOrEmpty(search))
-                {
-                    url += $"?search={Uri.EscapeDataString(search)}";
-                }
+                var json = JsonSerializer.Serialize(contact);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.GetAsync(url);
+                var response = await _httpClient.PostAsync(_baseUrl, content);
                 response.EnsureSuccessStatusCode();
 
-                var content = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<List<ContactDto>>(content) ?? new List<ContactDto>();
+                var responseContent = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<ContactDto>(responseContent);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ошибка получения данных: {ex.Message}");
-                return new List<ContactDto>();
+                Console.WriteLine($"Ошибка создания контакта: {ex.Message}");
+                throw;
             }
         }
 
@@ -105,7 +91,21 @@ namespace MauiApp4.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ошибка одновления данных: {ex.Message}");
+                Console.WriteLine($"Ошибка обновления данных: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task DeleteContactAsync(int id)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"{_baseUrl}/{id}");
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка удаления контакта: {ex.Message}");
                 throw;
             }
         }
